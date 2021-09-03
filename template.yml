@@ -75,33 +75,95 @@ Resources:
         PolicyDocument:
           Version: '2012-10-17'
           Statement:
-          - Effect: Allow
+          - Sid: CloudFormationTemplate
+            Effect: Allow
+            Action:
+            - cloudformation:CreateChangeSet
+            Resource: '*'
+          - Sid: CloudFormationStack
+            Effect: Allow
+            Action:
+            - cloudformation:CreateChangeSet
+            - cloudformation:CreateStack
+            - cloudformation:DeleteStack
+            - cloudformation:DescribeChangeSet
+            - cloudformation:DescribeStackEvents
+            - cloudformation:DescribeStacks
+            - cloudformation:ExecuteChangeSet
+            - cloudformation:GetTemplateSummary
+            - cloudformation:ListStackResources
+            - cloudformation:UpdateStack
+            Resource: '*'
+          - Sid: S3
+            Effect: Allow
+            Action:
+            - s3:CreateBucket
+            - s3:GetObject
+            - s3:PutObject
+            Resource: '*'
+          - Sid: ECRRepository
+            Effect: Allow
             Action:
             - ecr:BatchCheckLayerAvailability
-            - ecr:GetAuthorizationToken
+            - ecr:BatchGetImage
             - ecr:CompleteLayerUpload
+            - ecr:CreateRepository
+            - ecr:DeleteRepository
+            - ecr:DescribeImages
+            - ecr:DescribeRepositories
+            - ecr:GetDownloadUrlForLayer
+            - ecr:GetRepositoryPolicy
             - ecr:InitiateLayerUpload
-            - ecr:UploadLayerPart
+            - ecr:ListImages
             - ecr:PutImage
-            - iam:GetRole
-            - kms:CreateGrant
-            - kms:Decrypt
-            - kms:DescribeKey
-            - kms:GenerateDataKey
+            - ecr:SetRepositoryPolicy
+            - ecr:UploadLayerPart
+            Resource: '*'
+          - Sid: ECRAuthToken
+            Effect: Allow
+            Action:
+            - ecr:GetAuthorizationToken
+            Resource: '*'
+          - Sid: Lambda
+            Effect: Allow
+            Action:
+            - lambda:AddPermission
+            - lambda:CreateFunction
+            - lambda:DeleteFunction
             - lambda:GetFunction
+            - lambda:GetFunctionConfiguration
             - lambda:ListTags
+            - lambda:RemovePermission
+            - lambda:TagResource
+            - lambda:UntagResource
             - lambda:UpdateFunctionCode
+            - lambda:UpdateFunctionConfiguration
+            Resource: '*'
+          - Sid: IAM
+            Effect: Allow
+            Action:
+            - iam:AttachRolePolicy
+            - iam:DeleteRole
+            - iam:DetachRolePolicy
+            - iam:GetRole
+            - iam:PassRole
+            - iam:TagRole
+            Resource: '*'
+          - Sid: APIGateway
+            Effect: Allow
+            Action:
+            - apigateway:DELETE
+            - apigateway:GET
+            - apigateway:PATCH
+            - apigateway:POST
+            - apigateway:PUT
+            Resource: '*'
+          - Sid: Logs
+            Effect: Allow
+            Action:
             - logs:CreateLogStream
             - logs:CreateLogGroup
             - logs:PutLogEvents
-            - s3:PutObject
-            - s3:GetObject
-            - s3:GetObjectVersion
-            - s3:GetBucketAcl
-            - s3:GetBucketLocation
-            - codebuild:*
-            - cloudformation:*
-            Resource: '*'
 
   EventRole:
     Description: IAM role to allow Amazon CloudWatch Events to trigger AWS CodeBuild build
