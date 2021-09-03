@@ -1,0 +1,27 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.8
+    commands:
+      # Upgrade AWS CLI and AWS SAM CLI to the latest version
+      - pip install --upgrade --user awscli
+      - pip install --upgrade aws-sam-cli
+
+  pre_build:
+    on-failure: CONTINUE
+    commands:
+      - echo Test started on `date`
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+  build:
+    commands:
+      - echo Build started on `date`
+      - sam build 
+      - sam package --output-template-file template-export.yml --image-repository $ECR_Repo --s3-bucket $S3_BUCKET
+      - sam deploy --debug --no-confirm-changeset --template-file template-export.yml --stack-name $STACK_NAME --image-repositories virusscannerfn=$ECR_Repo --s3-bucket $S3_BUCKET --capabilities CAPABILITY_NAMED_IAM --parameter-overrides "GITRepo=$GITRepo ECR_Repo=$ECR_Repo S3Buckets=$S3Buckets SecretName=$SecretName SecretKey=$SecretKey PreferredAction=$PreferredAction"
+
+artifacts:
+  files:
+    - template-export.yml
+    - template-configuration.json

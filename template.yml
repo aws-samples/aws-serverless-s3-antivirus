@@ -1,0 +1,261 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: An AWS Lambda application to keep your S3 buckets safe from viruses using ClamAV Open Source software
+Metadata:
+  LICENSE: Apache License, Version 2.0
+  'AWS::CloudFormation::Interface':
+    ParameterLabels:
+      PreferredAction:
+        default: Preferred Action
+      ECRRepo:
+        default: ECR Repository URL
+      GITRepo:
+        default: GIT Repository Name
+      S3Buckets:
+        default: S3 Bucket Names
+      SecretName:
+        default: Secret Name
+      SecretKey:
+        default: Secret Key
+
+Parameters:
+    PreferredAction:
+      Type: String
+      AllowedValues:
+        - 'Delete'
+        - 'Tag'
+      Description: Choose "Delete" if you want to delete the infected file. Or "Tag" to assign a tag but keep the file.
+      Default: 'Delete'
+    ECRRepo:
+      Type: String
+      Description: Enter the URL of your ECR repository. e.g., AWSAccountID.dkr.ecr.AWS_REGION_ID.amazonaws.com/ecr_repo_name
+    GITRepo:
+      Type: String
+      Description: Enter the URL of your git repository. e.g., https://github.com/your_user_name/quickstart-clamav.git
+    S3Buckets:
+      Type: CommaDelimitedList
+      Description: Enter your S3 bucket names to be scanned separated by commas. e.g., bucket1,bucket2
+    SecretName:
+      Type: String
+      Description: Enter the Secret name
+      Default: gitsecret
+    SecretKey:
+      Type: String
+      Description: Enter the secret key name
+      Default: gitpat
+
+Resources:
+  
+  BuildArtifacts:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Description: Creating service role in IAM for AWS CodeBuild
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service: codebuild.amazonaws.com
+      Path: /
+      RoleName: !Join
+        - '-'
+        - - !Ref 'AWS::StackName'
+          - CodeBuild
+      Policies:
+      - PolicyName: BuildsDockerImages
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - ecr:BatchCheckLayerAvailability
+            - ecr:GetAuthorizationToken
+            - ecr:CompleteLayerUpload
+            - ecr:InitiateLayerUpload
+            - ecr:UploadLayerPart
+            - ecr:PutImage
+            - iam:GetRole
+            - kms:CreateGrant
+            - kms:Decrypt
+            - kms:DescribeKey
+            - kms:GenerateDataKey
+            - lambda:GetFunction
+            - lambda:ListTags
+            - lambda:UpdateFunctionCode
+            - logs:CreateLogStream
+            - logs:CreateLogGroup
+            - logs:PutLogEvents
+            - s3:PutObject
+            - s3:GetObject
+            - s3:GetObjectVersion
+            - s3:GetBucketAcl
+            - s3:GetBucketLocation
+            - codebuild:*
+            - cloudformation:CreateChangeSet
+            Resource: '*'
+
+  EventRole:
+    Description: IAM role to allow Amazon CloudWatch Events to trigger AWS CodeBuild build
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - events.amazonaws.com
+          Sid: 1
+      Policies:
+      - PolicyDocument:
+          Statement:
+          - Action:
+            - codebuild:StartBuild
+            Effect: Allow
+            Resource: !GetAtt 'SamCodeBuild.Arn'
+        PolicyName: !Join
+          - '-'
+          - - !Ref 'AWS::StackName'
+            - CloudWatchEventPolicy
+      RoleName: !Join
+        - '-'
+        - - !Ref 'AWS::StackName'
+          - CloudWatchEventRule
+    Type: AWS::IAM::Role
+
+  virusscannerfn:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      Description: Call the AWS Lambda API
+      Timeout: 300
+      MemorySize: 2048
+      # Function's execution role
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AWSLambda_ReadOnlyAccess
+        - AWSXrayWriteOnlyAccess
+        - AmazonS3FullAccess
+      Tracing: Active
+      Environment:
+        Variables:
+          preferredAction:
+            Ref: PreferredAction
+      Events:
+        s3Notification:
+          Type: CloudWatchEvent 
+          Properties:
+            Pattern:
+              source:
+                - aws.s3
+              detail-type:
+                - AWS API Call via CloudTrail
+              detail:
+                eventSource:
+                  - s3.amazonaws.com
+                eventName:
+                  - PutObject
+                requestParameters:
+                  bucketName: !Ref S3Buckets
+    Metadata:
+      DockerTag: virus-scanner
+      DockerContext: .
+      Dockerfile: Dockerfile
+  
+  CodeBuildSourceCredential:
+    Type: AWS::CodeBuild::SourceCredential
+    Properties:
+      AuthType: PERSONAL_ACCESS_TOKEN
+      ServerType: GITHUB
+      Token: !Join
+      - ''
+      - - '{{resolve:secretsmanager:'
+        - !Ref SecretName
+        - ':SecretString:'
+        - !Ref SecretKey
+        - '}}'
+
+  SamCodeBuild:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: ClamAV-CodeBuild-Project
+      Description: Build process for a ClamAV Application deployed using AWS SAM
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts:
+        Type: S3
+        Location: !GetAtt BuildArtifacts.Arn
+        Name: code-build-artifacts
+        Path: ''
+        NamespaceType: NONE
+        Packaging: NONE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:2.0
+        PrivilegedMode: true
+        EnvironmentVariables:
+          - Name: AWS_REGION
+            Value: !Ref "AWS::Region"
+          - Name: ACCOUNT_ID
+            Value: !Ref "AWS::AccountId"
+          - Name: STACK_NAME
+            Value: !Ref AWS::StackName
+          - Name: S3_BUCKET
+            Value: !Ref BuildArtifacts
+          - Name: ECR_Repo
+            Value: !Ref ECRRepo
+          - Name: GITRepo
+            Value: !Ref GITRepo
+          - Name: PreferredAction
+            Value: !Ref PreferredAction
+          - Name: S3Buckets
+            Value: !Join [ ",", !Ref S3Buckets]
+          - Name: SecretName
+            Value: !Ref SecretName
+          - Name: SecretKey
+            Value: !Ref SecretKey
+      Source:
+        Auth:
+          Resource: !Ref CodeBuildSourceCredential
+          Type: OAUTH
+        Location: !Ref GITRepo
+        Type: GITHUB
+        GitCloneDepth: 1
+      Triggers:
+        Webhook: true
+        FilterGroups:
+          - - Type: EVENT
+              Pattern: PUSH
+              ExcludeMatchedPattern: false
+      BadgeEnabled: false
+      LogsConfig:
+        CloudWatchLogs: 
+          Status: ENABLED
+        S3Logs:
+          Status: DISABLED
+          EncryptionDisabled: false
+      TimeoutInMinutes: 10
+
+  NightlyEvent:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Rule for Amazon CloudWatch Events to trigger a build every day
+      ScheduleExpression: "rate(1 day)"
+      Name: !Join
+      - '-'
+      - - !Ref 'AWS::StackName'
+        - NightlyBuild
+      State: ENABLED
+      Targets:
+      - Arn: !GetAtt 'SamCodeBuild.Arn'
+        Id: NightlyCheck
+        RoleArn: !GetAtt 'EventRole.Arn'
+        Input: '{"buildspecOverride":"buildspec.yml"}'
