@@ -100,7 +100,7 @@ Resources:
             - s3:GetBucketAcl
             - s3:GetBucketLocation
             - codebuild:*
-            - cloudformation:CreateChangeSet
+            - cloudformation:*
             Resource: '*'
 
   EventRole:
