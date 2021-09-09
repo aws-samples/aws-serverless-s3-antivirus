@@ -2,7 +2,7 @@
 
 An AWS SAM application to keep your S3 buckets safe from viruses using ClamAV Open Source software
  
-## Architecture Diagram
+## Solution Overview
 
 ![Architecture Diagram!](/QuickStart-ClamAV.png "Quick Start ClamAV")
 
@@ -24,6 +24,9 @@ An AWS SAM application to keep your S3 buckets safe from viruses using ClamAV Op
 **D.** CodeBuild build project updates the lambda function to use latest image
 
 **E.** A Timer Event runs every 24 hours and triggers the build. Build process will update the container image with latest virus definitions, publishes to ECR and updates the lambda function
+
+## Virus Scanning Process
+![Virus Scanning Process!](/clamavblog.png "Scanning Process")
 
 # Deployment Guide
 
