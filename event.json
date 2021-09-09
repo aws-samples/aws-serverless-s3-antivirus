@@ -1,0 +1,80 @@
+{
+    "version": "0",
+    "id": "45b100f9-4011-c3bc-2a62-229c97c42082",
+    "detail-type": "AWS API Call via CloudTrail",
+    "source": "aws.s3",
+    "account": "111111111",
+    "time": "2021-06-04T22: 36: 51Z",
+    "region": "us-east-1",
+    "resources": [],
+    "detail": {
+        "eventVersion": "1.08",
+        "userIdentity": {
+            "type": "AssumedRole",
+            "principalId": "AROASUFJNF5XSS54DHLLM:juluriaj-Isengard",
+            "arn": "arn:aws:sts: : 180743909231:assumed-role/Admin/juluriaj-Isengard",
+            "accountId": "111111111",
+            "accessKeyId": "abcabcabc",
+            "sessionContext": {
+                "sessionIssuer": {
+                    "type": "Role",
+                    "principalId": "AROASUFJNF5XSS54DHLLM",
+                    "arn": "arn:aws:iam: : 111111111:role/Admin",
+                    "accountId": "111111111",
+                    "userName": "Admin"
+                },
+                "attributes": {
+                    "creationDate": "2021-06-04T17: 45: 38Z",
+                    "mfaAuthenticated": "false"
+                }
+            }
+        },
+        "eventTime": "2021-06-04T22: 36: 51Z",
+        "eventSource": "s3.amazonaws.com",
+        "eventName": "PutObject",
+        "awsRegion": "us-east-1",
+        "sourceIPAddress": "72.21.196.69",
+        "userAgent": "[Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36]",
+        "requestParameters": {
+            "X-Amz-Date": "20210604T223650Z",
+            "bucketName": "sftp-demo-flapd",
+            "X-Amz-Algorithm": "AWS4-HMAC-SHA256",
+            "x-amz-acl": "private",
+            "X-Amz-SignedHeaders": "content-md5;content-type;host;x-amz-acl;x-amz-storage-class",
+            "Host": "sftp-demo-flapd.s3.us-east-1.amazonaws.com",
+            "X-Amz-Expires": "300",
+            "key": "tainted.txt",
+            "x-amz-storage-class": "STANDARD"
+        },
+        "responseElements": {
+            "x-amz-server-side-encryption": "AES256"
+        },
+        "additionalEventData": {
+            "SignatureVersion": "SigV4",
+            "CipherSuite": "ECDHE-RSA-AES128-GCM-SHA256",
+            "bytesTransferredIn": 68.0,
+            "SSEApplied": "Default_SSE_S3",
+            "AuthenticationMethod": "QueryString",
+            "x-amz-id-2": "4YEPFGHFBTlgnacBmYX8p5arCC2K5X/gEQlTCVuPHHnt9PzvCBlDwZQisR7LhrT3AuHPhnAVq6c=",
+            "bytesTransferredOut": 0.0
+        },
+        "requestID": "3DH3VZ85Y3YQ47ZD",
+        "eventID": "41e21c6f-f074-4f0c-a9ea-3f395baa0716",
+        "readOnly": "False",
+        "resources": [
+            {
+                "type": "AWS: :S3: :Object",
+                "ARN": "arn:aws:s3: : :sftp-demo-flapd/tainted.txt"
+            },
+            {
+                "accountId": "111111111",
+                "type": "AWS: :S3: :Bucket",
+                "ARN": "arn:aws:s3: : :sftp-demo-flapd"
+            }
+        ],
+        "eventType": "AwsApiCall",
+        "managementEvent": "False",
+        "recipientAccountId": "111111111",
+        "eventCategory": "Data"
+    }
+}
