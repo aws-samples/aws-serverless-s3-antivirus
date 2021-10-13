@@ -1,6 +1,6 @@
 # README
 
-An AWS SAM application to keep your S3 buckets safe from viruses using ClamAV Open Source software
+An AWS SAM application to keep your S3 objects safe from viruses using ClamAV Open Source software
  
 ## Solution Overview
 
