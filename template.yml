@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: 'AWS::Serverless-2016-10-31'
-Description: An AWS Lambda application to keep your S3 buckets safe from viruses using ClamAV Open Source software
+Description: An AWS Lambda application to keep your S3 buckets safe from viruses using ClamAV Open Source software. **WARNING** This template creates a SAM application and related resources. You will be billed for the AWS resources used if you create a stack from this template.
 Metadata:
   LICENSE: Apache License, Version 2.0
   'AWS::CloudFormation::Interface':
