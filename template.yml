@@ -54,11 +54,13 @@ Resources:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
+      VersioningConfiguration:
+        Status: Enabled
 
   CodeBuildRole:
     Type: AWS::IAM::Role
-    Description: Creating service role in IAM for AWS CodeBuild
     Properties:
+      Description: Creating service role in IAM for AWS CodeBuild
       AssumeRolePolicyDocument:
         Statement:
         - Action: sts:AssumeRole
@@ -80,8 +82,8 @@ Resources:
             Resource: '*'
 
   EventRole:
-    Description: IAM role to allow Amazon CloudWatch Events to trigger AWS CodeBuild build
     Properties:
+      Description: IAM role to allow Amazon CloudWatch Events to trigger AWS CodeBuild build
       AssumeRolePolicyDocument:
         Statement:
         - Action: sts:AssumeRole
